@@ -40,7 +40,7 @@
         <div class="input-group">
             <label>ID Asesor / Sincronizar</label>
             <div style="display: flex; gap: 8px;">
-                <input type="text" id="Ch_asesor" placeholder="Ej: 57837" required>
+                <input type="text" id="Ch_asesor" placeholder="Cargar CH sin espacios ni puntos" required>
                 <button type="button" class="btn-search" onclick="consultarMisCargas()"><i class="fas fa-search"></i></button>
             </div>
         </div>
@@ -62,15 +62,20 @@
                 <label>Producto</label>
                 <select id="Producto" required>
                     <option value="">Seleccione...</option>
-                    <option value="Internet Fibra">Internet Fibra</option>
-                    <option value="TV Digital">TV Digital</option>
-                    <option value="Duo Pack">Duo Pack</option>
+                    <option value="Internet Fibra">Duo Pack</option>
+                    <option value="TV Digital">Internet</option>
+                    <option value="Duo Pack">TV</option>
+                     <option value="TV Digital">One TV</option>
+                    <option value="Duo Pack">DTH</option>
+                    <option value="TV Digital">Chip Pospago</option>
+                    <option value="Duo Pack">Chip Prepago</option>
                 </select>
             </div>
 
             <div class="input-group">
                 <label>Estado del Prospecto</label>
                 <select id="Estado_Prospecto" required>
+                    <option value="PENDIENTE">Seleccione...</option>
                     <option value="PENDIENTE">PENDIENTE</option>
                     <option value="VISITADO">VISITADO</option>
                     <option value="INTERESADO">INTERESADO</option>
