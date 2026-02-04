@@ -107,23 +107,33 @@
         e.preventDefault();
         const btn = document.getElementById('submitBtn');
         btn.disabled = true;
-        btn.innerText = "Procesando...";
 
-        const data = {};
-        const inputs = this.querySelectorAll('input, select, textarea');
-        inputs.forEach(input => { data[input.id] = input.value; });
+        // ESTO ES LO MÁS IMPORTANTE: Recoger los datos con los IDs correctos
+        const data = {
+            id_fila: document.getElementById('id_fila').value,
+            Ch_asesor: document.getElementById('Ch_asesor').value,
+            Cliente_Nombre: document.getElementById('Cliente_Nombre').value,
+            Cliente_Telefono: document.getElementById('Cliente_Telefono').value,
+            Cliente_Documento: document.getElementById('Cliente_Documento').value,
+            Direccion: document.getElementById('Direccion').value,
+            Ciudad: document.getElementById('Ciudad').value,
+            Producto: document.getElementById('Producto').value,
+            Observaciones: document.getElementById('Observaciones').value,
+            Latitud: document.getElementById('Latitud').value,
+            Longitud: document.getElementById('Longitud').value,
+            Link_Maps: document.getElementById('Link_Maps').value
+        };
+
+        console.log("Enviando estos datos:", data); // Mira esto en la consola del navegador (F12)
 
         fetch(WEB_APP_URL, {
             method: 'POST',
             mode: 'no-cors',
             body: JSON.stringify(data)
         }).then(() => {
-            alert("¡Operación exitosa!");
+            alert("¡Procesado correctamente!");
             resetForm();
             consultarMisCargas();
-        }).catch(err => {
-            alert("Error de conexión.");
-            btn.disabled = false;
         });
     });
 
