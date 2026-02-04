@@ -3,73 +3,221 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Carga de Prospectos</title>
+    <title>Salesforce Lite - Prospectos</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    
     <style>
-        :root { --success: #28a745; --info: #007bff; --warning: #ffc107; --danger: #dc3545; }
-        body { font-family: 'Segoe UI', sans-serif; padding: 20px; background-color: #f4f4f9; }
-        .container { max-width: 500px; margin: auto; background: white; padding: 20px; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
-        input, select, textarea { width: 100%; padding: 12px; margin: 8px 0; border: 1px solid #ccc; border-radius: 5px; box-sizing: border-box; font-size: 16px; }
-        button { width: 100%; padding: 12px; border: none; border-radius: 5px; cursor: pointer; font-size: 16px; font-weight: bold; transition: 0.3s; }
-        .btn-main { background-color: var(--success); color: white; margin-top: 10px; }
-        .gps-btn { background-color: var(--info); color: white; margin-bottom: 15px; }
-        .status { font-size: 0.9em; color: #666; text-align: center; margin-bottom: 10px; }
-        .edit-mode { border: 2px solid var(--warning); background-color: #fffdf5; }
-        table { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 0.8em; }
-        th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
-        th { background-color: #eee; }
-        .btn-edit-small { background: var(--warning); color: black; padding: 4px 8px; border-radius: 3px; font-size: 11px; }
+        :root {
+            --bg-color: #f8f9fa;
+            --card-bg: #ffffff;
+            --primary: #4361ee;
+            --success: #2ec4b6;
+            --warning: #ff9f1c;
+            --danger: #e71d36;
+            --text-main: #2b2d42;
+            --text-muted: #8d99ae;
+        }
+
+        body { 
+            font-family: 'Inter', sans-serif; 
+            margin: 0; 
+            padding: 0; 
+            background-color: var(--bg-color); 
+            color: var(--text-main);
+        }
+
+        .header {
+            background: var(--primary);
+            color: white;
+            padding: 20px;
+            text-align: center;
+            border-bottom-left-radius: 25px;
+            border-bottom-right-radius: 25px;
+            box-shadow: 0 4px 12px rgba(67, 97, 238, 0.3);
+        }
+
+        .stats-bar {
+            display: flex;
+            justify-content: space-around;
+            margin: -25px 20px 20px 20px;
+            background: white;
+            padding: 15px;
+            border-radius: 15px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+        }
+
+        .stat-item { text-align: center; }
+        .stat-value { display: block; font-weight: 700; color: var(--primary); font-size: 1.2em; }
+        .stat-label { font-size: 0.7em; color: var(--text-muted); text-transform: uppercase; }
+
+        .container { padding: 0 20px 40px 20px; max-width: 500px; margin: auto; }
+
+        .card {
+            background: var(--card-bg);
+            border-radius: 18px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+        }
+
+        .input-group { margin-bottom: 15px; }
+        .input-group label { 
+            display: block; 
+            margin-bottom: 5px; 
+            font-size: 0.85em; 
+            font-weight: 600; 
+            color: var(--text-muted);
+        }
+
+        input, select, textarea {
+            width: 100%;
+            padding: 12px 15px;
+            border: 1.5px solid #edf2f4;
+            border-radius: 12px;
+            font-size: 16px;
+            transition: 0.3s;
+            background: #fdfdfd;
+        }
+
+        input:focus { border-color: var(--primary); outline: none; background: white; }
+
+        .btn {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            width: 100%;
+            padding: 14px;
+            border-radius: 12px;
+            font-weight: 700;
+            border: none;
+            cursor: pointer;
+            transition: 0.3s;
+        }
+
+        .btn-gps { background: #e0e7ff; color: var(--primary); margin-bottom: 20px; }
+        .btn-submit { background: var(--primary); color: white; margin-top: 10px; }
+        .btn-submit:active { transform: scale(0.98); }
+
+        /* Estilo de la lista de prospectos */
+        .lead-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 15px;
+            border-bottom: 1px solid #f1f5f9;
+        }
+        .lead-info h4 { margin: 0; font-size: 0.95em; }
+        .lead-info p { margin: 2px 0 0; font-size: 0.75em; color: var(--text-muted); }
+        .badge {
+            padding: 4px 8px;
+            border-radius: 6px;
+            font-size: 0.65em;
+            font-weight: 700;
+            text-transform: uppercase;
+        }
+        .badge-nuevo { background: #d1fae5; color: #065f46; }
+
+        .edit-overlay { 
+            position: fixed; 
+            top: 0; left: 0; width: 100%; height: 5px; 
+            background: var(--warning); 
+            display: none;
+            z-index: 1000;
+        }
     </style>
 </head>
 <body>
 
-<div class="container" id="formContainer">
-    <h2 id="tituloForm">Nuevo Prospecto</h2>
-    <p class="status" id="gpsStatus">📍 Ubicación no capturada</p>
-    <button type="button" class="gps-btn" onclick="getLocation()">Capturar Ubicación Actual</button>
+    <div id="editIndicator" class="edit-overlay"></div>
 
-    <form id="prospectoForm">
-        <input type="hidden" id="id_fila">
-        
-        <input type="text" id="Ch_asesor" placeholder="ID Vendedor (Ej: VEN001)" required>
-        <hr>
-        <input type="text" id="Cliente_Nombre" placeholder="Nombre del Cliente" required>
-        <input type="tel" id="Cliente_Telefono" placeholder="Teléfono" required>
-        <input type="text" id="Cliente_Documento" placeholder="Documento (DNI/CI)">
-        <input type="text" id="Direccion" placeholder="Dirección Exacta" required>
-        <input type="text" id="Ciudad" placeholder="Ciudad" required>
-        
-        <select id="Producto" required>
-            <option value="">Seleccione Producto</option>
-            <option value="Internet Fibra">Internet Fibra</option>
-            <option value="TV Digital">TV Digital</option>
-            <option value="Duo Pack">Duo Pack</option>
-        </select>
+    <div class="header">
+        <h2 style="margin:0; font-size: 1.2em;">Panel de Ventas</h2>
+        <p style="margin:5px 0 0; font-size: 0.8em; opacity: 0.8;">Gestión de Prospectos v2.0</p>
+    </div>
 
-        <input type="text" id="Plan_Velocidad" placeholder="Plan / Velocidad">
-        <input type="number" id="Precio_Estimado" placeholder="Precio Estimado">
-        
-        <label style="font-size: 0.8em;">Fecha de Visita:</label>
-        <input type="date" id="Fecha_Visita">
-        
-        <textarea id="Observaciones" placeholder="Notas adicionales..."></textarea>
-
-        <input type="hidden" id="Latitud">
-        <input type="hidden" id="Longitud">
-        <input type="hidden" id="Link_Maps">
-
-        <button type="submit" id="submitBtn" class="btn-main">Enviar Prospecto</button>
-        <button type="button" id="btnCancelar" class="btn-main" style="display:none; background:var(--danger); margin-top:5px;" onclick="cancelarEdicion()">Cancelar Edición</button>
-    </form>
-</div>
-
-<hr>
-
-<div class="container">
-    <h3>Mis Cargas del Mes</h3>
-    <button type="button" class="gps-btn" style="background-color: #6c757d;" onclick="consultarMisCargas()">🔄 Actualizar Mis Cargas</button>
-    <div id="listaCargas" style="margin-top: 10px; overflow-x: auto;">
+    <div class="stats-bar">
+        <div class="stat-item">
+            <span class="stat-value" id="countHoy">0</span>
+            <span class="stat-label">Hoy</span>
         </div>
-</div>
+        <div class="stat-item">
+            <span class="stat-value" id="countMes">0</span>
+            <span class="stat-label">Mes</span>
+        </div>
+    </div>
+
+    <div class="container">
+        <div class="card">
+            <p class="status" id="gpsStatus"><i class="fas fa-map-marker-alt"></i> Ubicación pendiente</p>
+            <button class="btn btn-gps" onclick="getLocation()">
+                <i class="fas fa-location-arrow"></i> Capturar GPS Actual
+            </button>
+
+            <form id="prospectoForm">
+                <input type="hidden" id="id_fila">
+                
+                <div class="input-group">
+                    <label>ID VENDEDOR</label>
+                    <input type="text" id="Ch_asesor" placeholder="Cód. Asesor" required>
+                </div>
+
+                <div class="input-group">
+                    <label>NOMBRE CLIENTE</label>
+                    <input type="text" id="Cliente_Nombre" required>
+                </div>
+
+                <div style="display: flex; gap: 10px;">
+                    <div class="input-group" style="flex: 2;">
+                        <label>TELÉFONO</label>
+                        <input type="tel" id="Cliente_Telefono" required>
+                    </div>
+                    <div class="input-group" style="flex: 1.5;">
+                        <label>DOC. IDENTIDAD</label>
+                        <input type="text" id="Cliente_Documento">
+                    </div>
+                </div>
+
+                <div class="input-group">
+                    <label>PRODUCTO</label>
+                    <select id="Producto" required>
+                        <option value="">Seleccione...</option>
+                        <option value="Internet Fibra">Internet Fibra</option>
+                        <option value="TV Digital">TV Digital</option>
+                        <option value="Duo Pack">Duo Pack</option>
+                    </select>
+                </div>
+
+                <div class="input-group">
+                    <label>CIUDAD / DIRECCIÓN</label>
+                    <input type="text" id="Ciudad" placeholder="Ciudad" required>
+                    <input type="text" id="Direccion" placeholder="Dirección Exacta" required>
+                </div>
+
+                <div class="input-group">
+                    <label>OBSERVACIONES</label>
+                    <textarea id="Observaciones" rows="2"></textarea>
+                </div>
+
+                <input type="hidden" id="Latitud">
+                <input type="hidden" id="Longitud">
+                <input type="hidden" id="Link_Maps">
+
+                <button type="submit" id="submitBtn" class="btn btn-submit">
+                    <i class="fas fa-paper-plane"></i> <span id="btnText">Enviar Registro</span>
+                </button>
+                <button type="button" id="btnCancel" class="btn" style="display:none; background:#f1f5f9; margin-top:10px;" onclick="cancelarEdicion()">
+                    Cancelar
+                </button>
+            </form>
+        </div>
+
+        <h3 style="font-size: 1em; margin: 25px 0 15px;"><i class="fas fa-history"></i> Mis Últimas Cargas</h3>
+        <div class="card" style="padding: 0;" id="listaCargas">
+            <p style="padding: 20px; text-align: center; color: var(--text-muted); font-size: 0.8em;">Ingrese su ID para sincronizar.</p>
+        </div>
+    </div>
 
 <script>
     const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbwP4ZTScbIzHBugtC1cDdWUlnDagscylBmN8MO3ZSwIknQQw3nAmCPBloY8jV9-se-h8g/exec";
@@ -77,16 +225,14 @@
     function getLocation() {
         const status = document.getElementById('gpsStatus');
         if (navigator.geolocation) {
-            status.innerText = "⏳ Localizando...";
+            status.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Localizando...';
             navigator.geolocation.getCurrentPosition((pos) => {
                 document.getElementById('Latitud').value = pos.coords.latitude;
                 document.getElementById('Longitud').value = pos.coords.longitude;
                 document.getElementById('Link_Maps').value = `https://www.google.com/maps?q=${pos.coords.latitude},${pos.coords.longitude}`;
-                status.innerText = "✅ Ubicación capturada";
-                status.style.color = "green";
+                status.innerHTML = '<i class="fas fa-check-circle" style="color:var(--success)"></i> Ubicación capturada';
             }, () => {
-                status.innerText = "❌ Error GPS. Actívalo.";
-                status.style.color = "red";
+                status.innerHTML = '<i class="fas fa-exclamation-triangle" style="color:var(--danger)"></i> Error de GPS';
             });
         }
     }
@@ -95,48 +241,53 @@
         e.preventDefault();
         const btn = document.getElementById('submitBtn');
         btn.disabled = true;
-        btn.innerText = "Procesando...";
+        btn.innerHTML = '<i class="fas fa-circle-notch fa-spin"></i> Procesando...';
 
         const data = {};
-        const inputs = this.querySelectorAll('input, select, textarea');
-        inputs.forEach(input => { data[input.id] = input.value; });
+        this.querySelectorAll('input, select, textarea').forEach(input => { data[input.id] = input.value; });
 
         fetch(WEB_APP_URL, {
             method: 'POST',
             mode: 'no-cors',
-            cache: 'no-cache',
             body: JSON.stringify(data)
         }).then(() => {
-            alert("¡Operación exitosa!");
-            cancelarEdicion(); // Limpia el formulario
+            alert("¡Éxito!");
+            cancelarEdicion();
             consultarMisCargas();
-        }).catch(err => {
-            alert("Error al procesar.");
-            btn.disabled = false;
         });
     });
 
     function consultarMisCargas() {
         const ch = document.getElementById('Ch_asesor').value;
-        if (!ch) { alert("Ingresa tu ID primero"); return; }
         const lista = document.getElementById('listaCargas');
-        lista.innerHTML = "Cargando...";
+        if (!ch) return;
 
         fetch(`${WEB_APP_URL}?ch=${ch}`)
             .then(res => res.json())
             .then(data => {
-                if (data.length === 0) { lista.innerHTML = "Sin registros."; return; }
-                let tabla = `<table><tr><th>Fecha</th><th>Cliente</th><th>Estado</th><th>Acción</th></tr>`;
-                data.forEach(item => {
-                    tabla += `<tr>
-                        <td>${item.fecha}</td>
-                        <td>${item.cliente}</td>
-                        <td>${item.estado || 'NUEVO'}</td>
-                        <td><button class="btn-edit-small" onclick='prepararEdicion(${JSON.stringify(item)})'>Editar</button></td>
-                    </tr>`;
+                document.getElementById('countMes').innerText = data.length;
+                document.getElementById('countHoy').innerText = data.filter(d => d.fecha === new Date().toLocaleDateString('es-ES', {day:'2-digit', month:'2-digit'})).length;
+                
+                if (data.length === 0) {
+                    lista.innerHTML = '<p style="padding:20px; text-align:center;">Sin registros.</p>';
+                    return;
+                }
+                
+                let html = '';
+                data.slice(0, 10).forEach(item => {
+                    html += `
+                    <div class="lead-item">
+                        <div class="lead-info">
+                            <h4>${item.cliente}</h4>
+                            <p>${item.fecha} • ${item.producto}</p>
+                        </div>
+                        <div style="display:flex; align-items:center; gap:10px;">
+                            <span class="badge badge-nuevo">${item.estado || 'Nuevo'}</span>
+                            <i class="fas fa-edit" style="color:var(--primary); cursor:pointer;" onclick='prepararEdicion(${JSON.stringify(item)})'></i>
+                        </div>
+                    </div>`;
                 });
-                tabla += "</table>";
-                lista.innerHTML = tabla;
+                lista.innerHTML = html;
             });
     }
 
@@ -148,29 +299,22 @@
         document.getElementById('Ciudad').value = item.ciudad;
         document.getElementById('Producto').value = item.producto;
         document.getElementById('Observaciones').value = item.observaciones;
-        
-        // Estética de edición
-        document.getElementById('formContainer').classList.add('edit-mode');
-        document.getElementById('tituloForm').innerText = "✏️ Editando Registro";
-        document.getElementById('submitBtn').innerText = "Guardar Cambios";
-        document.getElementById('submitBtn').style.backgroundColor = "var(--warning)";
-        document.getElementById('submitBtn').style.color = "black";
-        document.getElementById('btnCancelar').style.display = "block";
+
+        document.getElementById('editIndicator').style.display = 'block';
+        document.getElementById('btnText').innerText = "Actualizar Cambios";
+        document.getElementById('submitBtn').style.background = "var(--warning)";
+        document.getElementById('btnCancel').style.display = "block";
         window.scrollTo({top: 0, behavior: 'smooth'});
     }
 
     function cancelarEdicion() {
         document.getElementById('prospectoForm').reset();
         document.getElementById('id_fila').value = "";
-        document.getElementById('formContainer').classList.remove('edit-mode');
-        document.getElementById('tituloForm').innerText = "Nuevo Prospecto";
-        document.getElementById('submitBtn').innerText = "Enviar Prospecto";
-        document.getElementById('submitBtn').style.backgroundColor = "var(--success)";
-        document.getElementById('submitBtn').style.color = "white";
+        document.getElementById('editIndicator').style.display = 'none';
+        document.getElementById('btnText').innerText = "Enviar Registro";
+        document.getElementById('submitBtn').style.background = "var(--primary)";
+        document.getElementById('btnCancel').style.display = "none";
         document.getElementById('submitBtn').disabled = false;
-        document.getElementById('btnCancelar').style.display = "none";
-        document.getElementById('gpsStatus').innerText = "📍 Ubicación no capturada";
-        document.getElementById('gpsStatus').style.color = "#666";
     }
 </script>
 </body>
