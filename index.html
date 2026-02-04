@@ -101,5 +101,43 @@
     });
 </script>
 
+    <hr>
+<div class="container">
+    <h3>Mis Cargas del Mes</h3>
+    <button type="button" class="gps-btn" style="background-color: #6c757d;" onclick="consultarMisCargas()">🔄 Actualizar Mis Cargas</button>
+    <div id="listaCargas" style="margin-top: 10px; font-size: 0.85em;">
+        </div>
+</div>
+
+<script>
+    function consultarMisCargas() {
+        const ch = document.getElementById('Ch_asesor').value;
+        if (!ch) { alert("Ingresa tu ID de Vendedor primero"); return; }
+        
+        const lista = document.getElementById('listaCargas');
+        lista.innerHTML = "Cargando...";
+
+        fetch(`${WEB_APP_URL}?ch=${ch}`)
+            .then(res => res.json())
+            .then(data => {
+                if (data.length === 0) {
+                    lista.innerHTML = "No tienes cargas registradas este mes.";
+                    return;
+                }
+                let tabla = `<table border="1" style="width:100%; border-collapse: collapse;">
+                    <tr style="background:#eee;"><th>Fecha</th><th>Cliente</th><th>Estado</th></tr>`;
+                data.forEach(item => {
+                    tabla += `<tr><td>${item.fecha}</td><td>${item.cliente}</td><td>${item.estado}</td></tr>`;
+                });
+                tabla += "</table>";
+                lista.innerHTML = tabla;
+            })
+            .catch(err => {
+                lista.innerHTML = "Error al consultar.";
+                console.error(err);
+            });
+    }
+</script>
+
 </body>
 </html>
