@@ -5,23 +5,31 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Carga de Prospectos</title>
     <style>
-        body { font-family: sans-serif; padding: 20px; background-color: #f4f4f9; }
+        :root { --success: #28a745; --info: #007bff; --warning: #ffc107; --danger: #dc3545; }
+        body { font-family: 'Segoe UI', sans-serif; padding: 20px; background-color: #f4f4f9; }
         .container { max-width: 500px; margin: auto; background: white; padding: 20px; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
-        input, select, textarea { width: 100%; padding: 10px; margin: 10px 0; border: 1px solid #ccc; border-radius: 5px; box-sizing: border-box; }
-        button { width: 100%; padding: 12px; background-color: #28a745; color: white; border: none; border-radius: 5px; cursor: pointer; font-size: 16px; }
-        button:disabled { background-color: #ccc; }
-        .gps-btn { background-color: #007bff; margin-bottom: 20px; }
-        .status { font-size: 0.9em; color: #666; text-align: center; }
+        input, select, textarea { width: 100%; padding: 12px; margin: 8px 0; border: 1px solid #ccc; border-radius: 5px; box-sizing: border-box; font-size: 16px; }
+        button { width: 100%; padding: 12px; border: none; border-radius: 5px; cursor: pointer; font-size: 16px; font-weight: bold; transition: 0.3s; }
+        .btn-main { background-color: var(--success); color: white; margin-top: 10px; }
+        .gps-btn { background-color: var(--info); color: white; margin-bottom: 15px; }
+        .status { font-size: 0.9em; color: #666; text-align: center; margin-bottom: 10px; }
+        .edit-mode { border: 2px solid var(--warning); background-color: #fffdf5; }
+        table { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 0.8em; }
+        th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+        th { background-color: #eee; }
+        .btn-edit-small { background: var(--warning); color: black; padding: 4px 8px; border-radius: 3px; font-size: 11px; }
     </style>
 </head>
 <body>
 
-<div class="container">
-    <h2>Nuevo Prospecto</h2>
-    <p class="status" id="gpsStatus">Ubicación no capturada</p>
-    <button type="button" class="gps-btn" onclick="getLocation()">📍 Capturar Ubicación Actual</button>
+<div class="container" id="formContainer">
+    <h2 id="tituloForm">Nuevo Prospecto</h2>
+    <p class="status" id="gpsStatus">📍 Ubicación no capturada</p>
+    <button type="button" class="gps-btn" onclick="getLocation()">Capturar Ubicación Actual</button>
 
     <form id="prospectoForm">
+        <input type="hidden" id="id_fila">
+        
         <input type="text" id="Ch_asesor" placeholder="ID Vendedor (Ej: VEN001)" required>
         <hr>
         <input type="text" id="Cliente_Nombre" placeholder="Nombre del Cliente" required>
@@ -40,7 +48,7 @@
         <input type="text" id="Plan_Velocidad" placeholder="Plan / Velocidad">
         <input type="number" id="Precio_Estimado" placeholder="Precio Estimado">
         
-        <label>Fecha de Visita:</label>
+        <label style="font-size: 0.8em;">Fecha de Visita:</label>
         <input type="date" id="Fecha_Visita">
         
         <textarea id="Observaciones" placeholder="Notas adicionales..."></textarea>
@@ -49,25 +57,35 @@
         <input type="hidden" id="Longitud">
         <input type="hidden" id="Link_Maps">
 
-        <button type="submit" id="submitBtn">Enviar Prospecto</button>
+        <button type="submit" id="submitBtn" class="btn-main">Enviar Prospecto</button>
+        <button type="button" id="btnCancelar" class="btn-main" style="display:none; background:var(--danger); margin-top:5px;" onclick="cancelarEdicion()">Cancelar Edición</button>
     </form>
 </div>
 
+<hr>
+
+<div class="container">
+    <h3>Mis Cargas del Mes</h3>
+    <button type="button" class="gps-btn" style="background-color: #6c757d;" onclick="consultarMisCargas()">🔄 Actualizar Mis Cargas</button>
+    <div id="listaCargas" style="margin-top: 10px; overflow-x: auto;">
+        </div>
+</div>
+
 <script>
-    const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbwP4ZTScbIzHBugtC1cDdWUlnDagscylBmN8MO3ZSwIknQQw3nAmCPBloY8jV9-se-h8g/exec"; // <--- PEGA TU URL AQUÍ
+    const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbwP4ZTScbIzHBugtC1cDdWUlnDagscylBmN8MO3ZSwIknQQw3nAmCPBloY8jV9-se-h8g/exec";
 
     function getLocation() {
         const status = document.getElementById('gpsStatus');
         if (navigator.geolocation) {
-            status.innerText = "Localizando...";
+            status.innerText = "⏳ Localizando...";
             navigator.geolocation.getCurrentPosition((pos) => {
                 document.getElementById('Latitud').value = pos.coords.latitude;
                 document.getElementById('Longitud').value = pos.coords.longitude;
                 document.getElementById('Link_Maps').value = `https://www.google.com/maps?q=${pos.coords.latitude},${pos.coords.longitude}`;
-                status.innerText = "✅ Ubicación capturada con éxito";
+                status.innerText = "✅ Ubicación capturada";
                 status.style.color = "green";
             }, () => {
-                status.innerText = "❌ Error al obtener ubicación. Activa el GPS.";
+                status.innerText = "❌ Error GPS. Actívalo.";
                 status.style.color = "red";
             });
         }
@@ -77,7 +95,7 @@
         e.preventDefault();
         const btn = document.getElementById('submitBtn');
         btn.disabled = true;
-        btn.innerText = "Enviando...";
+        btn.innerText = "Procesando...";
 
         const data = {};
         const inputs = this.querySelectorAll('input, select, textarea');
@@ -85,59 +103,75 @@
 
         fetch(WEB_APP_URL, {
             method: 'POST',
-            mode: 'no-cors', // Importante para evitar errores de CORS con Apps Script
+            mode: 'no-cors',
             cache: 'no-cache',
             body: JSON.stringify(data)
         }).then(() => {
-            alert("¡Prospecto cargado con éxito!");
-            this.reset();
-            document.getElementById('gpsStatus').innerText = "Ubicación no capturada";
-            btn.disabled = false;
-            btn.innerText = "Enviar Prospecto";
+            alert("¡Operación exitosa!");
+            cancelarEdicion(); // Limpia el formulario
+            consultarMisCargas();
         }).catch(err => {
-            alert("Error al enviar. Intenta de nuevo.");
+            alert("Error al procesar.");
             btn.disabled = false;
         });
     });
-</script>
 
-    <hr>
-<div class="container">
-    <h3>Mis Cargas del Mes</h3>
-    <button type="button" class="gps-btn" style="background-color: #6c757d;" onclick="consultarMisCargas()">🔄 Actualizar Mis Cargas</button>
-    <div id="listaCargas" style="margin-top: 10px; font-size: 0.85em;">
-        </div>
-</div>
-
-<script>
     function consultarMisCargas() {
         const ch = document.getElementById('Ch_asesor').value;
-        if (!ch) { alert("Ingresa tu ID de Vendedor primero"); return; }
-        
+        if (!ch) { alert("Ingresa tu ID primero"); return; }
         const lista = document.getElementById('listaCargas');
         lista.innerHTML = "Cargando...";
 
         fetch(`${WEB_APP_URL}?ch=${ch}`)
             .then(res => res.json())
             .then(data => {
-                if (data.length === 0) {
-                    lista.innerHTML = "No tienes cargas registradas este mes.";
-                    return;
-                }
-                let tabla = `<table border="1" style="width:100%; border-collapse: collapse;">
-                    <tr style="background:#eee;"><th>Fecha</th><th>Cliente</th><th>Estado</th></tr>`;
+                if (data.length === 0) { lista.innerHTML = "Sin registros."; return; }
+                let tabla = `<table><tr><th>Fecha</th><th>Cliente</th><th>Estado</th><th>Acción</th></tr>`;
                 data.forEach(item => {
-                    tabla += `<tr><td>${item.fecha}</td><td>${item.cliente}</td><td>${item.estado}</td></tr>`;
+                    tabla += `<tr>
+                        <td>${item.fecha}</td>
+                        <td>${item.cliente}</td>
+                        <td>${item.estado || 'NUEVO'}</td>
+                        <td><button class="btn-edit-small" onclick='prepararEdicion(${JSON.stringify(item)})'>Editar</button></td>
+                    </tr>`;
                 });
                 tabla += "</table>";
                 lista.innerHTML = tabla;
-            })
-            .catch(err => {
-                lista.innerHTML = "Error al consultar.";
-                console.error(err);
             });
     }
+
+    function prepararEdicion(item) {
+        document.getElementById('id_fila').value = item.id_fila;
+        document.getElementById('Cliente_Nombre').value = item.cliente;
+        document.getElementById('Cliente_Telefono').value = item.telefono;
+        document.getElementById('Direccion').value = item.direccion;
+        document.getElementById('Ciudad').value = item.ciudad;
+        document.getElementById('Producto').value = item.producto;
+        document.getElementById('Observaciones').value = item.observaciones;
+        
+        // Estética de edición
+        document.getElementById('formContainer').classList.add('edit-mode');
+        document.getElementById('tituloForm').innerText = "✏️ Editando Registro";
+        document.getElementById('submitBtn').innerText = "Guardar Cambios";
+        document.getElementById('submitBtn').style.backgroundColor = "var(--warning)";
+        document.getElementById('submitBtn').style.color = "black";
+        document.getElementById('btnCancelar').style.display = "block";
+        window.scrollTo({top: 0, behavior: 'smooth'});
+    }
+
+    function cancelarEdicion() {
+        document.getElementById('prospectoForm').reset();
+        document.getElementById('id_fila').value = "";
+        document.getElementById('formContainer').classList.remove('edit-mode');
+        document.getElementById('tituloForm').innerText = "Nuevo Prospecto";
+        document.getElementById('submitBtn').innerText = "Enviar Prospecto";
+        document.getElementById('submitBtn').style.backgroundColor = "var(--success)";
+        document.getElementById('submitBtn').style.color = "white";
+        document.getElementById('submitBtn').disabled = false;
+        document.getElementById('btnCancelar').style.display = "none";
+        document.getElementById('gpsStatus').innerText = "📍 Ubicación no capturada";
+        document.getElementById('gpsStatus').style.color = "#666";
+    }
 </script>
-    
 </body>
 </html>
