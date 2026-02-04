@@ -119,28 +119,45 @@
     });
 
     function consultarMisCargas() {
-        const ch = document.getElementById('Ch_asesor').value.trim();
-        const lista = document.getElementById('listaCargas');
-        if (!ch) { alert("Ingrese ID"); return; }
-        lista.innerHTML = '<div style="padding:30px; text-align:center;"><i class="fas fa-sync fa-spin"></i></div>';
+    const ch = document.getElementById('Ch_asesor').value.trim();
+    const lista = document.getElementById('listaCargas');
+    if (!ch) { alert("Por favor, ingrese su ID primero"); return; }
+    
+    lista.innerHTML = '<div style="padding:30px; text-align:center;"><i class="fas fa-sync fa-spin"></i> Sincronizando...</div>';
 
-        fetch(`${WEB_APP_URL}?ch=${ch}`)
-            .then(r => r.json())
-            .then(data => {
-                if (data.length === 0) { lista.innerHTML = '<p style="padding:20px; text-align:center;">Sin datos.</p>'; return; }
-                let html = '';
-                data.forEach(item => {
-                    html += `<div class="lead-item">
-                        <div class="lead-info"><h4>${item.cliente}</h4><p>${item.fecha} • ${item.producto}</p></div>
-                        <div style="display:flex; gap:12px; align-items:center;">
-                            <span class="badge">${item.estado || 'NUEVO'}</span>
-                            <i class="fas fa-edit" style="color:var(--primary); cursor:pointer;" onclick='prepararEdicion(${JSON.stringify(item)})'></i>
-                        </div>
-                    </div>`;
-                });
-                lista.innerHTML = html;
-            }).catch(() => { lista.innerHTML = '<p style="padding:20px; text-align:center;">Error</p>'; });
-    }
+    // Usamos una técnica de "cache-busting" agregando un número aleatorio al final
+    const urlConsulta = WEB_APP_URL + "?ch=" + encodeURIComponent(ch) + "&nocache=" + Math.random();
+
+    fetch(urlConsulta)
+        .then(response => {
+            if (!response.ok) throw new Error('Error en servidor');
+            return response.json();
+        })
+        .then(data => {
+            if (!data || data.length === 0) {
+                lista.innerHTML = '<p style="padding:20px; text-align:center; color:#888;">No se encontraron registros para este ID.</p>';
+                return;
+            }
+            let html = '';
+            data.forEach(item => {
+                html += `<div class="lead-item">
+                    <div class="lead-info">
+                        <h4>${item.cliente || 'Sin nombre'}</h4>
+                        <p>${item.fecha || '--/--'} • ${item.producto || 'S/P'}</p>
+                    </div>
+                    <div style="display:flex; gap:12px; align-items:center;">
+                        <span class="badge">${item.estado || 'NUEVO'}</span>
+                        <i class="fas fa-edit" style="color:var(--primary); cursor:pointer; font-size:1.2em;" onclick='prepararEdicion(${JSON.stringify(item)})'></i>
+                    </div>
+                </div>`;
+            });
+            lista.innerHTML = html;
+        })
+        .catch(err => {
+            console.error("Error:", err);
+            lista.innerHTML = '<p style="padding:20px; text-align:center; color:red;">Error de conexión. Revisa la URL del Script.</p>';
+        });
+}
 
     function prepararEdicion(item) {
         document.getElementById('id_fila').value = item.id_fila;
