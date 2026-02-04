@@ -3,101 +3,71 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SISTEMA PROSPECTOS - V1.0</title>
+    <title>Carga de Prospectos</title>
     <style>
-        :root { --primary: #28a745; --secondary: #007bff; --edit: #ffc107; }
-        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; padding: 15px; background-color: #f0f2f5; color: #333; }
-        .container { max-width: 600px; margin: auto; background: white; padding: 25px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
-        h2, h3 { text-align: center; color: #1a1a1a; }
-        label { font-weight: bold; font-size: 0.9em; display: block; margin-top: 10px; }
-        input, select, textarea { width: 100%; padding: 12px; margin: 8px 0; border: 1px solid #ddd; border-radius: 8px; box-sizing: border-box; font-size: 16px; }
-        button { width: 100%; padding: 15px; border: none; border-radius: 8px; cursor: pointer; font-size: 16px; font-weight: bold; transition: 0.3s; margin-top: 10px; }
-        .btn-submit { background-color: var(--primary); color: white; }
-        .btn-gps { background-color: var(--secondary); color: white; margin-bottom: 15px; }
-        .btn-refresh { background-color: #6c757d; color: white; }
-        .status-gps { text-align: center; font-size: 0.85em; margin-bottom: 10px; font-weight: bold; }
-        .tabla-contenedor { overflow-x: auto; margin-top: 20px; }
-        table { width: 100%; border-collapse: collapse; font-size: 0.85em; }
-        th, td { border: 1px solid #eee; padding: 10px; text-align: left; }
-        th { background-color: #f8f9fa; }
-        .btn-edit { background: var(--edit); padding: 5px 10px; border-radius: 4px; font-size: 0.8em; color: #000; }
+        body { font-family: sans-serif; padding: 20px; background-color: #f4f4f9; }
+        .container { max-width: 500px; margin: auto; background: white; padding: 20px; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+        input, select, textarea { width: 100%; padding: 10px; margin: 10px 0; border: 1px solid #ccc; border-radius: 5px; box-sizing: border-box; }
+        button { width: 100%; padding: 12px; background-color: #28a745; color: white; border: none; border-radius: 5px; cursor: pointer; font-size: 16px; }
+        button:disabled { background-color: #ccc; }
+        .gps-btn { background-color: #007bff; margin-bottom: 20px; }
+        .status { font-size: 0.9em; color: #666; text-align: center; }
     </style>
 </head>
 <body>
 
 <div class="container">
-    <h2 id="form-title">Nuevo Prospecto</h2>
-    
-    <div id="gpsStatus" class="status-gps">📍 Ubicación pendiente</div>
-    <button type="button" class="btn-gps" onclick="getLocation()">Capturar Ubicación GPS</button>
+    <h2>Nuevo Prospecto</h2>
+    <p class="status" id="gpsStatus">Ubicación no capturada</p>
+    <button type="button" class="gps-btn" onclick="getLocation()">📍 Capturar Ubicación Actual</button>
 
     <form id="prospectoForm">
-        <input type="hidden" id="id_fila">
-        
-        <label>ID Vendedor (Asesor):</label>
-        <input type="text" id="Ch_asesor" placeholder="Ej: VEN001" required>
-        
+        <input type="text" id="Ch_asesor" placeholder="ID Vendedor (Ej: VEN001)" required>
         <hr>
+        <input type="text" id="Cliente_Nombre" placeholder="Nombre del Cliente" required>
+        <input type="tel" id="Cliente_Telefono" placeholder="Teléfono" required>
+        <input type="text" id="Cliente_Documento" placeholder="Documento (DNI/CI)">
+        <input type="text" id="Direccion" placeholder="Dirección Exacta" required>
+        <input type="text" id="Ciudad" placeholder="Ciudad" required>
         
-        <label>Nombre del Cliente:</label>
-        <input type="text" id="Cliente_Nombre" required>
-        
-        <label>Teléfono:</label>
-        <input type="tel" id="Cliente_Telefono" required>
-        
-        <label>Documento (DNI/CI):</label>
-        <input type="text" id="Cliente_Documento">
-        
-        <label>Dirección:</label>
-        <input type="text" id="Direccion" required>
-        
-        <label>Ciudad:</label>
-        <input type="text" id="Ciudad" required>
-        
-        <label>Producto:</label>
         <select id="Producto" required>
-            <option value="">Seleccione...</option>
+            <option value="">Seleccione Producto</option>
             <option value="Internet Fibra">Internet Fibra</option>
             <option value="TV Digital">TV Digital</option>
             <option value="Duo Pack">Duo Pack</option>
         </select>
+
+        <input type="text" id="Plan_Velocidad" placeholder="Plan / Velocidad">
+        <input type="number" id="Precio_Estimado" placeholder="Precio Estimado">
         
-        <label>Observaciones:</label>
-        <textarea id="Observaciones" rows="3"></textarea>
+        <label>Fecha de Visita:</label>
+        <input type="date" id="Fecha_Visita">
+        
+        <textarea id="Observaciones" placeholder="Notas adicionales..."></textarea>
 
         <input type="hidden" id="Latitud">
         <input type="hidden" id="Longitud">
         <input type="hidden" id="Link_Maps">
 
-        <button type="submit" id="submitBtn" class="btn-submit">Enviar Datos</button>
-        <button type="button" id="cancelEdit" style="display:none; background:#dc3545; color:white;" onclick="resetForm()">Cancelar Edición</button>
+        <button type="submit" id="submitBtn">Enviar Prospecto</button>
     </form>
-
-    <hr style="margin: 30px 0;">
-
-    <h3>Mis Cargas del Mes</h3>
-    <button type="button" class="btn-refresh" onclick="consultarMisCargas()">🔄 Actualizar Mi Lista</button>
-    
-    <div class="tabla-contenedor" id="listaCargas">
-        <p style="text-align:center; color: #888;">Ingresa tu ID y presiona actualizar.</p>
-    </div>
 </div>
 
 <script>
-    const WEB_APP_URL = "TU_URL_DE_APPS_SCRIPT_AQUI";
+    const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbwP4ZTScbIzHBugtC1cDdWUlnDagscylBmN8MO3ZSwIknQQw3nAmCPBloY8jV9-se-h8g/exec"; // <--- PEGA TU URL AQUÍ
 
     function getLocation() {
         const status = document.getElementById('gpsStatus');
         if (navigator.geolocation) {
-            status.innerText = "⏳ Localizando...";
+            status.innerText = "Localizando...";
             navigator.geolocation.getCurrentPosition((pos) => {
                 document.getElementById('Latitud').value = pos.coords.latitude;
                 document.getElementById('Longitud').value = pos.coords.longitude;
                 document.getElementById('Link_Maps').value = `https://www.google.com/maps?q=${pos.coords.latitude},${pos.coords.longitude}`;
-                status.innerText = "✅ Ubicación capturada";
+                status.innerText = "✅ Ubicación capturada con éxito";
                 status.style.color = "green";
             }, () => {
-                status.innerText = "❌ Error GPS (Activa ubicación)";
+                status.innerText = "❌ Error al obtener ubicación. Activa el GPS.";
                 status.style.color = "red";
             });
         }
@@ -107,88 +77,28 @@
         e.preventDefault();
         const btn = document.getElementById('submitBtn');
         btn.disabled = true;
+        btn.innerText = "Enviando...";
 
-        // ESTO ES LO MÁS IMPORTANTE: Recoger los datos con los IDs correctos
-        const data = {
-            id_fila: document.getElementById('id_fila').value,
-            Ch_asesor: document.getElementById('Ch_asesor').value,
-            Cliente_Nombre: document.getElementById('Cliente_Nombre').value,
-            Cliente_Telefono: document.getElementById('Cliente_Telefono').value,
-            Cliente_Documento: document.getElementById('Cliente_Documento').value,
-            Direccion: document.getElementById('Direccion').value,
-            Ciudad: document.getElementById('Ciudad').value,
-            Producto: document.getElementById('Producto').value,
-            Observaciones: document.getElementById('Observaciones').value,
-            Latitud: document.getElementById('Latitud').value,
-            Longitud: document.getElementById('Longitud').value,
-            Link_Maps: document.getElementById('Link_Maps').value
-        };
-
-        console.log("Enviando estos datos:", data); // Mira esto en la consola del navegador (F12)
+        const data = {};
+        const inputs = this.querySelectorAll('input, select, textarea');
+        inputs.forEach(input => { data[input.id] = input.value; });
 
         fetch(WEB_APP_URL, {
             method: 'POST',
-            mode: 'no-cors',
+            mode: 'no-cors', // Importante para evitar errores de CORS con Apps Script
+            cache: 'no-cache',
             body: JSON.stringify(data)
         }).then(() => {
-            alert("¡Procesado correctamente!");
-            resetForm();
-            consultarMisCargas();
+            alert("¡Prospecto cargado con éxito!");
+            this.reset();
+            document.getElementById('gpsStatus').innerText = "Ubicación no capturada";
+            btn.disabled = false;
+            btn.innerText = "Enviar Prospecto";
+        }).catch(err => {
+            alert("Error al enviar. Intenta de nuevo.");
+            btn.disabled = false;
         });
     });
-
-    function consultarMisCargas() {
-        const ch = document.getElementById('Ch_asesor').value;
-        if (!ch) { alert("Ingresa tu ID de Vendedor"); return; }
-        const lista = document.getElementById('listaCargas');
-        lista.innerHTML = "<p style='text-align:center;'>Consultando...</p>";
-
-        fetch(`${WEB_APP_URL}?ch=${ch}`)
-            .then(res => res.json())
-            .then(data => {
-                if (data.length === 0) { lista.innerHTML = "No hay registros."; return; }
-                let tabla = `<table><tr><th>Fecha</th><th>Cliente</th><th>Estado</th><th>Acción</th></tr>`;
-                data.forEach(item => {
-                    tabla += `<tr>
-                        <td>${item.fecha}</td>
-                        <td>${item.cliente}</td>
-                        <td>${item.estado || 'NUEVO'}</td>
-                        <td><button class="btn-edit" onclick='prepararEdicion(${JSON.stringify(item)})'>✏️</button></td>
-                    </tr>`;
-                });
-                tabla += "</table>";
-                lista.innerHTML = tabla;
-            });
-    }
-
-    function prepararEdicion(item) {
-        document.getElementById('id_fila').value = item.id_fila;
-        document.getElementById('Cliente_Nombre').value = item.cliente;
-        document.getElementById('Cliente_Telefono').value = item.telefono;
-        document.getElementById('Cliente_Documento').value = item.documento || '';
-        document.getElementById('Direccion').value = item.direccion;
-        document.getElementById('Ciudad').value = item.ciudad;
-        document.getElementById('Producto').value = item.producto;
-        document.getElementById('Observaciones').value = item.observaciones;
-        
-        document.getElementById('form-title').innerText = "Editando Prospecto";
-        document.getElementById('submitBtn').innerText = "Actualizar Registro";
-        document.getElementById('submitBtn').style.backgroundColor = "var(--edit)";
-        document.getElementById('cancelEdit').style.display = "block";
-        window.scrollTo({top: 0, behavior: 'smooth'});
-    }
-
-    function resetForm() {
-        document.getElementById('prospectoForm').reset();
-        document.getElementById('id_fila').value = "";
-        document.getElementById('form-title').innerText = "Nuevo Prospecto";
-        document.getElementById('submitBtn').innerText = "Enviar Datos";
-        document.getElementById('submitBtn').style.backgroundColor = "var(--primary)";
-        document.getElementById('submitBtn').disabled = false;
-        document.getElementById('cancelEdit').style.display = "none";
-        document.getElementById('gpsStatus').innerText = "📍 Ubicación pendiente";
-        document.getElementById('gpsStatus').style.color = "#333";
-    }
 </script>
 
 </body>
