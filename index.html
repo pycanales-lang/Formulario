@@ -99,24 +99,35 @@
         }
     }
 
-    document.getElementById('prospectoForm').addEventListener('submit', function(e) {
-        e.preventDefault();
-        const btn = document.getElementById('submitBtn');
-        btn.disabled = true;
-        btn.innerHTML = '<i class="fas fa-circle-notch fa-spin"></i> Enviando...';
+document.getElementById('prospectoForm').addEventListener('submit', function(e) {
+    e.preventDefault();
+    const btn = document.getElementById('submitBtn');
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Enviando...';
 
-        const data = {};
-        this.querySelectorAll('input, select, textarea').forEach(i => data[i.id] = i.value);
+    const data = {};
+    new FormData(this).forEach((value, key) => { data[key] = value; });
+    // Si usas IDs en lugar de names, mantén tu lógica anterior de recolección de datos
 
-        fetch(WEB_APP_URL, { method: 'POST', mode: 'no-cors', body: JSON.stringify(data) })
-        .then(() => {
-            setTimeout(() => {
-                alert("¡Procesado correctamente!");
-                cancelarEdicion();
-                consultarMisCargas();
-            }, 1000);
-        }).catch(() => { alert("Error de red"); btn.disabled = false; });
+    fetch(WEB_APP_URL, {
+        method: 'POST',
+        mode: 'no-cors', // Esto es vital para evitar bloqueos de seguridad
+        body: JSON.stringify(data)
+    })
+    .then(() => {
+        // Forzamos el éxito tras 1.5 segundos
+        setTimeout(() => {
+            alert("Solicitud enviada. Verifique en su historial en unos segundos.");
+            cancelarEdicion();
+            btn.disabled = false;
+            btn.innerHTML = '<i class="fas fa-paper-plane"></i> Enviar Prospecto';
+        }, 1500);
+    })
+    .catch(err => {
+        alert("Error de conexión");
+        btn.disabled = false;
     });
+});
 
     function consultarMisCargas() {
     const ch = document.getElementById('Ch_asesor').value.trim();
