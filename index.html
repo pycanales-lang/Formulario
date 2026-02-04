@@ -339,6 +339,12 @@
         document.getElementById('btnCancel').style.display = "none";
         document.getElementById('submitBtn').disabled = false;
     }
+    // Este código hace que al escribir el ID, se busquen las cargas automáticamente
+    document.getElementById('Ch_asesor').addEventListener('blur', function() {
+        if (this.value.trim() !== "") {
+            consultarMisCargas();
+        }
+    });
 </script>
 </body>
 </html>
