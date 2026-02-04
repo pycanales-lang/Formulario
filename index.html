@@ -100,128 +100,81 @@
 </div>
 
 <script>
-    const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbwP4ZTScbIzHBugtC1cDdWUlnDagscylBmN8MO3ZSwIknQQw3nAmCPBloY8jV9-se-h8g/exec";
+    const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbwP4ZTScbIzHBugtC1cDdWUlnDagscylBmN8MO3ZSwIknQQw3nAmCPBloY8jV9-se-h8g/exec"; // ASEGÚRATE QUE SEA LA NUEVA
 
-    function getLocation() {
-        const st = document.getElementById('gpsStatus');
-        if (navigator.geolocation) {
-            st.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Localizando...';
-            navigator.geolocation.getCurrentPosition(p => {
-                document.getElementById('Latitud').value = p.coords.latitude;
-                document.getElementById('Longitud').value = p.coords.longitude;
-                document.getElementById('Link_Maps').value = `https://www.google.com/maps?q=${p.coords.latitude},${p.coords.longitude}`;
-                st.innerHTML = '<i class="fas fa-check-circle" style="color:var(--success)"></i> Ubicación capturada';
-            }, () => { st.innerHTML = '<i class="fas fa-times" style="color:var(--danger)"></i> Error GPS'; });
-        }
-    }
-
-document.getElementById('prospectoForm').addEventListener('submit', function(e) {
-    e.preventDefault();
-    const btn = document.getElementById('submitBtn');
-    const originalHtml = btn.innerHTML;
-    
-    // Bloquear botón
-    btn.disabled = true;
-    btn.innerHTML = '<i class="fas fa-circle-notch fa-spin"></i> Enviando...';
-
-    // Recolectar datos incluyendo el ID del asesor que está fuera del form
-    const data = {
-        Ch_asesor: document.getElementById('Ch_asesor').value
-    };
-    
-    // Traer todos los campos del formulario
-    this.querySelectorAll('input, select, textarea').forEach(el => {
-        if(el.id) data[el.id] = el.value;
-    });
-
-    fetch(WEB_APP_URL, {
-        method: 'POST',
-        mode: 'no-cors', // Importante para Google Apps Script
-        body: JSON.stringify(data)
-    })
-    .then(() => {
-        // Forzamos el éxito y desbloqueo
-        setTimeout(() => {
-            alert("¡Procesado correctamente!");
-            cancelarEdicion(); // Limpia campos y resetea botón
-            consultarMisCargas(); // Actualiza historial
-        }, 1500);
-    })
-    .catch(err => {
-        alert("Error al enviar. Revise su conexión.");
-        btn.disabled = false;
-        btn.innerHTML = originalHtml;
-    });
-});
-
-function cancelarEdicion() {
-    document.getElementById('prospectoForm').reset();
-    document.getElementById('id_fila').value = "";
-    document.getElementById('editBar').style.display = 'none';
-    
-    // Resetear Botón de Enviar
-    const btn = document.getElementById('submitBtn');
-    btn.disabled = false;
-    btn.innerHTML = '<i class="fas fa-paper-plane"></i> Enviar Prospecto';
-    btn.style.background = "var(--primary)";
-    btn.style.color = "white";
-    
-    document.getElementById('btnCancel').style.display = "none";
-    document.getElementById('gpsStatus').innerHTML = '<i class="fas fa-map-marker-alt"></i> GPS Pendiente';
-}
-
-    function consultarMisCargas() {
-        const ch = document.getElementById('Ch_asesor').value.trim();
+    async function consultarMisCargas() {
+        const ch = document.getElementById('Ch_asesor').value;
         const lista = document.getElementById('listaCargas');
-        if (!ch) { alert("Ingrese ID"); return; }
-        lista.innerHTML = '<div style="padding:30px; text-align:center;"><i class="fas fa-sync fa-spin"></i> Sincronizando...</div>';
-
-        fetch(`${WEB_APP_URL}?ch=${ch}&t=${new Date().getTime()}`)
-            .then(r => r.json())
-            .then(data => {
-                if (data.length === 0) { lista.innerHTML = '<p style="padding:20px; text-align:center;">Sin registros para este ID.</p>'; return; }
-                let html = '';
-                data.forEach(item => {
-                    html += `<div class="lead-item">
-                        <div class="lead-info"><h4>${item.cliente}</h4><p>${item.fecha} • ${item.producto}</p></div>
-                        <div style="display:flex; gap:12px; align-items:center;">
-                            <span class="badge">${item.estado || 'PENDIENTE'}</span>
-                            <i class="fas fa-edit" style="color:var(--primary); cursor:pointer;" onclick='prepararEdicion(${JSON.stringify(item)})'></i>
-                        </div>
-                    </div>`;
-                });
-                lista.innerHTML = html;
-            }).catch(() => { lista.innerHTML = '<p style="padding:20px; text-align:center; color:red;">Error de conexión.</p>'; });
+        if (!ch) return alert("Pon tu ID");
+        
+        lista.innerHTML = "Sincronizando...";
+        try {
+            const r = await fetch(`${WEB_APP_URL}?ch=${ch}`);
+            const data = await r.json();
+            let html = '';
+            data.forEach(item => {
+                html += `<div class="lead-item">
+                    <div class="lead-info"><b>${item.cliente}</b><br><small>${item.fecha} - ${item.producto}</small></div>
+                    <div><span class="badge">${item.estado}</span> <i class="fas fa-edit" onclick='prepararEdicion(${JSON.stringify(item)})'></i></div>
+                </div>`;
+            });
+            lista.innerHTML = html || "Sin datos";
+        } catch(e) { lista.innerHTML = "Error al buscar"; }
     }
+
+    document.getElementById('prospectoForm').addEventListener('submit', async function(e) {
+        e.preventDefault();
+        const btn = document.getElementById('submitBtn');
+        btn.disabled = true;
+        btn.innerText = "PROCESANDO...";
+
+        const data = { Ch_asesor: document.getElementById('Ch_asesor').value };
+        new FormData(this).forEach((v, k) => data[k] = v);
+        // Recolección manual por si FormData falla en algunos móviles
+        this.querySelectorAll('input, select, textarea').forEach(i => data[i.id] = i.value);
+
+        try {
+            await fetch(WEB_APP_URL, {
+                method: 'POST',
+                mode: 'no-cors',
+                body: JSON.stringify(data)
+            });
+            alert("¡Registro Enviado!");
+            cancelarEdicion();
+            consultarMisCargas();
+        } catch (err) {
+            alert("Error de conexión");
+        } finally {
+            btn.disabled = false;
+            btn.innerText = "Enviar Prospecto";
+        }
+    });
 
     function prepararEdicion(item) {
         document.getElementById('id_fila').value = item.id_fila;
         document.getElementById('Cliente_Nombre').value = item.cliente;
         document.getElementById('Cliente_Telefono').value = item.telefono;
-        document.getElementById('Direccion').value = item.direccion;
-        document.getElementById('Ciudad').value = item.ciudad;
         document.getElementById('Producto').value = item.producto;
-        document.getElementById('Estado_Prospecto').value = item.estado || 'PENDIENTE';
+        document.getElementById('Estado_Prospecto').value = item.estado;
         document.getElementById('Observaciones').value = item.observaciones;
-        
-        document.getElementById('editBar').style.display = 'block';
-        document.getElementById('btnText').innerText = "Guardar Cambios";
-        document.getElementById('submitBtn').style.background = "var(--warning)";
-        document.getElementById('submitBtn').style.color = "black";
+        document.getElementById('submitBtn').style.background = "orange";
         document.getElementById('btnCancel').style.display = "block";
-        window.scrollTo({top:0, behavior:'smooth'});
     }
 
     function cancelarEdicion() {
         document.getElementById('prospectoForm').reset();
         document.getElementById('id_fila').value = "";
-        document.getElementById('editBar').style.display = 'none';
-        document.getElementById('btnText').innerText = "Enviar Prospecto";
-        document.getElementById('submitBtn').style.background = "var(--primary)";
-        document.getElementById('submitBtn').style.color = "white";
+        document.getElementById('submitBtn').style.background = "#4361ee";
         document.getElementById('btnCancel').style.display = "none";
-        document.getElementById('submitBtn').disabled = false;
-        document.getElementById('gpsStatus').innerHTML = '<i class="fas fa-map-marker-alt"></i> GPS Pendiente';
+    }
+
+    function getLocation() {
+        navigator.geolocation.getCurrentPosition(p => {
+            document.getElementById('Latitud').value = p.coords.latitude;
+            document.getElementById('Longitud').value = p.coords.longitude;
+            document.getElementById('Link_Maps').value = `https://www.google.com/maps?q=${p.coords.latitude},${p.coords.longitude}`;
+            document.getElementById('gpsStatus').innerText = "✅ Ubicación OK";
+        });
     }
 </script>
 </body>
